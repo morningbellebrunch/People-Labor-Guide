@@ -917,16 +917,16 @@
       var sch = n(saved.s);
       var bud = sales * p;
       var th = w > 0 ? bud / w : 0;
-      return { k: q[0], name: q[1], p: p, w: w, sch: sch, bud: bud, th: th, v: th - sch,
+      return { k: q[0], name: q[1], p: p, w: w, sch: sch, dol: sch * w, bud: bud, th: th, v: th - sch,
         manual: manual, auto: auto[q[0]],
         rawP: manual ? saved.p : (auto[q[0]] * 100).toFixed(2),
         rawW: has(cf.wages[q[0]]) ? cf.wages[q[0]] : q[3], rawS: has(saved.s) ? saved.s : '' };
     });
-    var hp = 0, hb = 0, th = 0, sch = 0;
-    rows.forEach(function (x) { hp += x.p; hb += x.bud; th += x.th; sch += x.sch; });
+    var hp = 0, hb = 0, th = 0, sch = 0, sd = 0;
+    rows.forEach(function (x) { hp += x.p; hb += x.bud; th += x.th; sch += x.sch; sd += x.dol; });
     return { L: L, r: r, cf: cf, sales: sales, target: target, mgr: mgrFixed, mgrPct: mgrPct, rows: rows, short: short,
       schPct: has(r.schpct) ? n(r.schpct) / 100 : null,
-      hourlyPct: hp, hourlyBud: hb, targetHrs: th, schedHrs: sch, allow: allow, totalPct: hp + mgrPct };
+      hourlyPct: hp, hourlyBud: hb, targetHrs: th, schedHrs: sch, schedDol: sd, allow: allow, totalPct: hp + mgrPct };
   }
 
   function renderLabor() {
@@ -1005,7 +1005,7 @@
     return kpi(hrs(c.targetHrs), 'Target hours') +
       kpi(hrs(c.schedHrs), 'Scheduled') +
       kpi((v >= 0 ? '+' : '') + hrs(v), 'Hours left', c.schedHrs > 0 ? (v >= 0 ? 'good' : 'bad') : '') +
-      kpi(c.schedHrs > 0 ? '$' + (c.sales / c.schedHrs).toFixed(0) : 'Waiting', 'SPLH scheduled');
+      kpi((c.hourlyBud - c.schedDol < 0 ? '-' : '') + money(Math.abs(c.hourlyBud - c.schedDol)), 'Dollars left', c.schedDol > 0 ? (c.hourlyBud - c.schedDol >= 0 ? 'good' : 'bad') : '');
   }
   function topKpis(c) {
     var gap = c.allow - c.hourlyPct;
@@ -1248,6 +1248,8 @@
       out.push([]);
       out.push(['SPLH target', c.targetHrs > 0 ? (c.sales / c.targetHrs).toFixed(2) : '']);
       out.push(['SPLH scheduled', c.schedHrs > 0 ? (c.sales / c.schedHrs).toFixed(2) : '']);
+      out.push(['Scheduled dollars', Math.round(c.schedDol)]);
+      out.push(['Dollars left', Math.round(c.hourlyBud - c.schedDol)]);
       if (unlocked) {
         out.push([]); out.push(['Manager', Math.round(c.mgr), (c.mgrPct * 100).toFixed(2) + '%']);
         out.push(['Total percent', (c.totalPct * 100).toFixed(2) + '%', 'Target ' + (c.target * 100).toFixed(2) + '%']);
