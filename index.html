@@ -755,19 +755,19 @@
 
   var LOCS = [
     { id:'1001', num:'1001', name:'Beltline', days:['Sat','Sun'], mgr:2558, target:0.30,
-      roles:[['sup','Supervisor',0.005,20.5],['cook','Cook',0.105,17.96],['dish','Dishwasher',0.015,15.5],['srv','Server',0.0372,4.75],['host','Host',0.027,12.48]],
+      roles:[['sup','Supervisor',0.005,21.65],['cook','Cook',0.105,19.33],['dish','Dishwasher',0.015,16.5],['srv','Server',0.0372,5.49],['host','Host',0.027,14.22]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
     { id:'1002', num:'1002', name:'Bridge St', days:['Sat','Sun'], mgr:1591, target:0.28,
-      roles:[['sup','Supervisor',0.0219,20],['cook','Cook',0.103,18.23],['dish','Dishwasher',0.008,15],['srv','Server',0.03,4.75],['host','Host',0.015,14.33]],
+      roles:[['sup','Supervisor',0.0219,20.44],['cook','Cook',0.103,18.55],['dish','Dishwasher',0.008,15.53],['srv','Server',0.03,5.49],['host','Host',0.015,13.93]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
     { id:'1003', num:'1003', name:'Breton', days:['Sat','Sun'], mgr:2366, target:0.28,
-      roles:[['sup','Supervisor',0.0075,19.82],['cook','Cook',0.095,18.6],['dish','Dishwasher',0.02,16.5],['srv','Server',0.03,4.75],['host','Host',0.0266,13.28]],
+      roles:[['sup','Supervisor',0.0075,20.8],['cook','Cook',0.095,19.81],['dish','Dishwasher',0.02,16.64],['srv','Server',0.03,5.49],['host','Host',0.0266,13.81]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
     { id:'1004', num:'1004', name:'Standale', days:['Sat','Sun'], mgr:2495, target:0.28,
-      roles:[['sup','Supervisor',0.005,20],['cook','Cook',0.099,18.17],['dish','Dishwasher',0.01,15],['srv','Server',0.031,4.75],['host','Host',0.02,12.48]],
+      roles:[['sup','Supervisor',0.005,20.71],['cook','Cook',0.099,19.38],['dish','Dishwasher',0.01,15],['srv','Server',0.031,5.43],['host','Host',0.02,13.73]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors','Bartenders'] },
     { id:'1503', num:'1503', name:'Blue Porch', days:['Fri','Sat'], mgr:1281, target:0.28,
-      roles:[['sup','Supervisor',0.015,20],['boh','BOH',0.13,18],['bar','Bar Manager',0.0246,25],['srv','Server',0.04,4.5],['host','Host',0.008,12]],
+      roles:[['sup','Supervisor',0.015,19.5],['boh','BOH',0.13,17.74],['bar','Bar Manager',0.0246,25],['btd','Bartender',0,9.77],['srv','Server',0.04,5.01],['host','Host',0.008,13.73]],
       staff:['Cooks','Servers','Hosts','Supervisors','Bartenders'] }
   ];
   var TRAINERS = ['Certified FOH Trainers','Certified BOH Trainers'];
@@ -920,7 +920,7 @@
       return { k: q[0], name: q[1], p: p, w: w, sch: sch, dol: sch * w, bud: bud, th: th, v: th - sch,
         manual: manual, auto: auto[q[0]],
         rawP: manual ? saved.p : (auto[q[0]] * 100).toFixed(2),
-        rawW: has(cf.wages[q[0]]) ? cf.wages[q[0]] : q[3], rawS: has(saved.s) ? saved.s : '' };
+        rawW: has(cf.wages[q[0]]) ? cf.wages[q[0]] : q[3].toFixed(2), rawS: has(saved.s) ? saved.s : '' };
     });
     var hp = 0, hb = 0, th = 0, sch = 0, sd = 0;
     rows.forEach(function (x) { hp += x.p; hb += x.bud; th += x.th; sch += x.sch; sd += x.dol; });
