@@ -329,8 +329,15 @@
   html[data-theme="dark"] .chip { background:rgba(255,255,255,0.07); }
   .chip:hover { transform:translateY(-2px); color:var(--ink); }
   .chip:active { transform:scale(.94); }
-  .chip.on { color:#fff; background:linear-gradient(160deg,rgba(153,201,97,.95),rgba(90,138,42,.92)); }
+  .chip.on { color:#fff; background:linear-gradient(165deg,#44707f,#2b4753); box-shadow:inset 0 1px 1px rgba(255,255,255,0.28),0 8px 20px rgba(40,70,84,0.3); transform:translateY(-1px) scale(1.04); }
+  .chip.on:hover { color:#fff; transform:translateY(-3px) scale(1.04); }
+  html[data-theme="dark"] .chip.on { color:#12262e; background:linear-gradient(165deg,#f2f8f6,#cfe3dd); box-shadow:0 8px 22px rgba(0,0,0,0.5); }
+  html[data-theme="dark"] .chip.on:hover { color:#12262e; }
   .chip .cnum { opacity:.6; font-weight:600; margin-right:5px; }
+  .chip.on .cnum { opacity:.75; color:var(--mb-green); }
+  html[data-theme="dark"] .chip.on .cnum { color:#4f7a22; }
+  .chip:not(.on) { opacity:.72; }
+  .chip:not(.on):hover { opacity:1; }
 
   .fld { display:flex; flex-direction:column; gap:4px; min-width:0; }
   .fld > span { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:var(--ink-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -509,6 +516,7 @@
 
     <div class="section-label dot-green rise d4">Positions</div>
     <div class="glass rise d5">
+      <div class="kpis" id="totKpis" style="margin-bottom:14px"></div>
       <div id="mgrBlock"></div>
       <div id="laborRows"></div>
       <div class="btn-row">
@@ -733,16 +741,16 @@
     { id:'1001', num:'1001', name:'Beltline', days:['Sat','Sun'], mgr:2558, target:0.30,
       roles:[['sup','Supervisor',0.005,20.5],['cook','Cook',0.105,17.96],['dish','Dishwasher',0.015,15.5],['srv','Server',0.0372,4.75],['host','Host',0.027,12.48]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
-    { id:'1002', num:'1002', name:'Bridge St', days:['Sat','Sun'], mgr:1192, target:0.28,
+    { id:'1002', num:'1002', name:'Bridge St', days:['Sat','Sun'], mgr:1591, target:0.28,
       roles:[['sup','Supervisor',0.0219,20],['cook','Cook',0.103,18.23],['dish','Dishwasher',0.008,15],['srv','Server',0.03,4.75],['host','Host',0.015,14.33]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
-    { id:'1003', num:'1003', name:'Breton', days:['Sat','Sun'], mgr:2230, target:0.28,
+    { id:'1003', num:'1003', name:'Breton', days:['Sat','Sun'], mgr:2366, target:0.28,
       roles:[['sup','Supervisor',0.0075,19.82],['cook','Cook',0.095,18.6],['dish','Dishwasher',0.02,16.5],['srv','Server',0.03,4.75],['host','Host',0.0266,13.28]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors'] },
-    { id:'1004', num:'1004', name:'Standale', days:['Sat','Sun'], mgr:2384, target:0.28,
+    { id:'1004', num:'1004', name:'Standale', days:['Sat','Sun'], mgr:2495, target:0.28,
       roles:[['sup','Supervisor',0.005,20],['cook','Cook',0.099,18.17],['dish','Dishwasher',0.01,15],['srv','Server',0.031,4.75],['host','Host',0.02,12.48]],
       staff:['Cooks','Dishwashers','Servers','Hosts','Supervisors','Bartenders'] },
-    { id:'1503', num:'1503', name:'Blue Porch', days:['Fri','Sat'], mgr:1250, target:0.28,
+    { id:'1503', num:'1503', name:'Blue Porch', days:['Fri','Sat'], mgr:1281, target:0.28,
       roles:[['sup','Supervisor',0.015,20],['boh','BOH',0.13,18],['bar','Bar Manager',0.0246,25],['srv','Server',0.04,4.5],['host','Host',0.008,12]],
       staff:['Cooks','Servers','Hosts','Supervisors','Bartenders'] }
   ];
@@ -920,7 +928,7 @@
       mb.innerHTML = '<div class="lrow"><div class="lrow-head"><div><div class="lrow-name">Manager</div>' +
         '<div class="lrow-sub">Fixed every week. ' + (c.sales > 0 ? pc(c.mgrPct) + ' of this projection' : 'Enter sales to see the percent') + '</div></div>' +
         '<span class="vpill flat">' + OPENSVG.replace('viewBox', 'style="width:13px;height:13px;vertical-align:-2px;margin-right:4px" viewBox') + 'Unlocked</span></div>' +
-        '<div class="grid2"><label class="fld"><span>Manager budget</span><input type="text" inputmode="decimal" data-mgr placeholder="0" value="' + esc(c.cf.mgr || '') + '"></label>' +
+        '<div class="grid2"><label class="fld"><span>Manager budget</span><input type="text" inputmode="decimal" data-mgr placeholder="' + c.L.mgr + '" value="' + esc(has(c.cf.mgr) ? c.cf.mgr : c.L.mgr) + '"></label>' +
         '<label class="fld"><span>Total target percent</span><input type="text" inputmode="decimal" data-target placeholder="' + (c.L.target * 100).toFixed(2) + '" value="' + esc(has(c.cf.target) ? c.cf.target : (c.L.target * 100).toFixed(2)) + '"></label></div>' +
         '<div class="kpis" style="margin-top:10px">' + kpi(c.sales > 0 ? pc(c.totalPct) : 'Waiting', 'Total percent', c.sales > 0 ? (c.totalPct <= c.target + 0.0005 ? 'good' : 'bad') : '') +
         kpi(pc(c.target), 'Total target') + '</div></div>';
@@ -945,13 +953,8 @@
 
     html += '<div class="mgr-locked warn" id="shortNote" style="display:none"></div>';
     html += '<div class="btn-row" id="resetRow" style="margin-top:0;display:none"><button class="btn" type="button" data-reset>Back to auto</button></div>';
-    var v = c.targetHrs - c.schedHrs;
-    html += '<div class="kpis" style="margin-top:14px">' +
-      kpi(hrs(c.targetHrs), 'Target hours') +
-      kpi(hrs(c.schedHrs), 'Scheduled') +
-      kpi((v >= 0 ? '+' : '') + hrs(v), 'Hours left', c.schedHrs > 0 ? (v >= 0 ? 'good' : 'bad') : '') +
-      kpi(c.schedHrs > 0 ? '$' + (c.sales / c.schedHrs).toFixed(0) : 'Waiting', 'SPLH scheduled') + '</div>';
     document.getElementById('laborRows').innerHTML = html;
+    document.getElementById('totKpis').innerHTML = totKpis(c);
     laborFlags(c);
 
     /* lock bar */
@@ -980,6 +983,13 @@
       var tag = row.closest('.lrow').querySelector('.tag');
       if (tag) { tag.className = 'tag' + (x.manual ? ' man' : ''); tag.textContent = x.manual ? 'Manual' : 'Auto'; }
     });
+  }
+  function totKpis(c) {
+    var v = c.targetHrs - c.schedHrs;
+    return kpi(hrs(c.targetHrs), 'Target hours') +
+      kpi(hrs(c.schedHrs), 'Scheduled') +
+      kpi((v >= 0 ? '+' : '') + hrs(v), 'Hours left', c.schedHrs > 0 ? (v >= 0 ? 'good' : 'bad') : '') +
+      kpi(c.schedHrs > 0 ? '$' + (c.sales / c.schedHrs).toFixed(0) : 'Waiting', 'SPLH scheduled');
   }
   function topKpis(c) {
     var gap = c.allow - c.hourlyPct;
@@ -1160,11 +1170,7 @@
       pill.textContent = c.sales > 0 ? (x.v >= 0 ? '+' : '') + hrs(x.v) + ' hrs' : 'Enter sales';
       box.querySelector('.ro').textContent = hrs(x.th);
     });
-    var v = c.targetHrs - c.schedHrs;
-    var tot = document.getElementById('laborRows').querySelector('.kpis');
-    if (tot) tot.innerHTML = kpi(hrs(c.targetHrs), 'Target hours') + kpi(hrs(c.schedHrs), 'Scheduled') +
-      kpi((v >= 0 ? '+' : '') + hrs(v), 'Hours left', c.schedHrs > 0 ? (v >= 0 ? 'good' : 'bad') : '') +
-      kpi(c.schedHrs > 0 ? '$' + (c.sales / c.schedHrs).toFixed(0) : 'Waiting', 'SPLH scheduled');
+    document.getElementById('totKpis').innerHTML = totKpis(c);
     if (unlocked) {
       var mk = document.getElementById('mgrBlock').querySelector('.kpis');
       if (mk) mk.innerHTML = kpi(c.sales > 0 ? pc(c.totalPct) : 'Waiting', 'Total percent', c.sales > 0 ? (c.totalPct <= c.target + 0.0005 ? 'good' : 'bad') : '') + kpi(pc(c.target), 'Total target');
