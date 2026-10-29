@@ -354,6 +354,20 @@
   .grid4 { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
   @media (min-width:620px) { .grid4 { grid-template-columns:repeat(4,1fr); } }
 
+  /* entry cells: yellow outline marks what a manager fills in */
+  #wkSales, #wkSchPct, .fld input[data-f="s"],
+  #page-schedule .fld input, #page-schedule .fld textarea,
+  #page-staffing .fld input, #page-staffing .fld textarea {
+    box-shadow:inset 0 0 0 2px #f2c230, inset 0 2px 4px rgba(40,70,84,0.07); background:rgba(255,246,206,0.55); }
+  html[data-theme="dark"] #wkSales, html[data-theme="dark"] #wkSchPct, html[data-theme="dark"] .fld input[data-f="s"],
+  html[data-theme="dark"] #page-schedule .fld input, html[data-theme="dark"] #page-schedule .fld textarea,
+  html[data-theme="dark"] #page-staffing .fld input, html[data-theme="dark"] #page-staffing .fld textarea {
+    box-shadow:inset 0 0 0 2px #f2c230; background:rgba(242,194,48,0.10); }
+  #wkSales:focus, #wkSchPct:focus, .fld input[data-f="s"]:focus,
+  #page-schedule .fld input:focus, #page-schedule .fld textarea:focus,
+  #page-staffing .fld input:focus, #page-staffing .fld textarea:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
+  .entrykey { display:flex; align-items:center; gap:8px; margin:-.6rem 0 1.1rem; padding:0 6px; font-size:11px; font-weight:600; color:var(--ink-faint); }
+  .entrykey i { width:22px; height:14px; border-radius:5px; flex-shrink:0; box-shadow:inset 0 0 0 2px #f2c230; background:rgba(255,246,206,0.55); }
   .lrow { padding:12px 13px; border-radius:16px; margin-bottom:10px; background:rgba(255,255,255,0.22); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4); }
   html[data-theme="dark"] .lrow { background:rgba(255,255,255,0.05); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.10); }
   .lrow-head { display:flex; align-items:baseline; gap:8px; margin-bottom:9px; }
@@ -420,7 +434,7 @@
     .weekbar { border:1px solid #ccc !important; background:#fff !important; box-shadow:none !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
     .glass, .lrow, .kpi, .fld .ro, .callout { background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important; backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
     .glass::after { display:none !important; }
-    .fld input, .fld select, .fld textarea { background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important; color:#222 !important; }
+    .fld input, .fld select, .fld textarea, #wkSales, #wkSchPct, .fld input[data-f="s"] { background:#fff !important; box-shadow:none !important; border:1px solid #ccc !important; color:#222 !important; }
     .hero { padding:0 0 1rem; text-align:left; }
     .hero-headline { font-size:24px; opacity:1 !important; transform:none !important; }
     .rise { opacity:1 !important; animation:none !important; }
@@ -495,6 +509,8 @@
     <button class="wknav" type="button" data-week="1" aria-label="Next week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="wknav" type="button" data-printall aria-label="Export all three pages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v11"/><path d="M8 11l4 4 4-4"/><path d="M4 19h16"/></svg></button>
   </div>
+
+  <div class="entrykey noprint"><i></i>Yellow outline means you enter this</div>
 
   <!-- PAGE: LABOR -->
   <section class="page active" id="page-labor">
