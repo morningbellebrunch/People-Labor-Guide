@@ -366,6 +366,14 @@
   #wkSales:focus, #wkSchPct:focus, .fld input[data-f="s"]:focus,
   #page-schedule .fld input:focus, #page-schedule .fld textarea:focus,
   #page-staffing .fld input:focus, #page-staffing .fld textarea:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
+  .fld input[data-ly] { box-shadow:inset 0 0 0 2px #f2c230, inset 0 2px 4px rgba(40,70,84,0.07); background:rgba(255,246,206,0.55); }
+  html[data-theme="dark"] .fld input[data-ly] { box-shadow:inset 0 0 0 2px #f2c230; background:rgba(242,194,48,0.10); }
+  .fld input[data-ly]:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
+  #scSch, #scTarg, #scTrain, #scNotes { box-shadow:inset 0 0 0 2px #f2c230, inset 0 2px 4px rgba(40,70,84,0.07); background:rgba(255,246,206,0.55); }
+  html[data-theme="dark"] #scSch, html[data-theme="dark"] #scTarg, html[data-theme="dark"] #scTrain, html[data-theme="dark"] #scNotes { box-shadow:inset 0 0 0 2px #f2c230; background:rgba(242,194,48,0.10); }
+  #scSch:focus, #scTarg:focus, #scTrain:focus, #scNotes:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
+  .look-line { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .look-line .fld { width:46%; flex-shrink:0; }
   .entrykey { display:flex; align-items:center; gap:8px; margin:-.6rem 0 1.1rem; padding:0 6px; font-size:11px; font-weight:600; color:var(--ink-faint); }
   .entrykey i { width:22px; height:14px; border-radius:5px; flex-shrink:0; box-shadow:inset 0 0 0 2px #f2c230; background:rgba(255,246,206,0.55); }
   .lrow { padding:12px 13px; border-radius:16px; margin-bottom:10px; background:rgba(255,255,255,0.22); box-shadow:inset 0 0 0 1px rgba(255,255,255,0.4); }
@@ -525,6 +533,13 @@
         <label class="fld"><span>Scheduled labor %</span><input type="text" inputmode="decimal" id="wkSchPct" placeholder="0.00"></label>
       </div>
       <div class="kpis" id="laborKpis"></div>
+      <div class="grid3" style="margin-top:14px">
+        <label class="fld"><span>Scheduled %</span><input type="text" inputmode="decimal" id="scSch" placeholder="20.9"></label>
+        <label class="fld"><span>Target %</span><input type="text" inputmode="decimal" id="scTarg" placeholder="22.3"></label>
+        <label class="fld"><span>Training %</span><input type="text" inputmode="decimal" id="scTrain" placeholder="0"></label>
+      </div>
+      <div class="kpis" id="scKpis" style="margin-top:12px"></div>
+      <label class="fld" style="margin-top:12px"><span>Notes</span><textarea id="scNotes" placeholder="One line a district manager can act on"></textarea></label>
       <div class="saveline"><span class="dotsave"></span>Every week is saved on this device on its own.</div>
     </div>
 
@@ -539,6 +554,12 @@
         <button class="btn primary" type="button" data-print>Print or save as PDF</button>
         <button class="btn" type="button" data-csv="labor">Download CSV</button>
       </div>
+    </div>
+
+    <div class="section-label dot-green">4 week look ahead</div>
+    <div class="glass">
+      <div class="card-body" style="margin-bottom:.9rem">Last year's sales for the same four weeks.</div>
+      <div id="lookRows"></div>
     </div>
 
     <div class="callout rise d6">
@@ -557,18 +578,6 @@
       <div class="card-title" id="schedTitle">Schedule review</div>
       <div id="scCover" style="margin-top:14px"></div>
       <label class="fld" style="margin-top:12px"><span>Holes</span><input type="text" id="scHoles" placeholder="Where the schedule is light"></label>
-    </div>
-
-    <div class="section-label dot-teal">Sales and labor</div>
-    <div class="glass">
-      <div class="grid3" id="scProj"></div>
-      <div class="grid3" style="margin-top:12px">
-        <label class="fld"><span>Scheduled %</span><input type="text" inputmode="decimal" id="scSch" placeholder="20.9"></label>
-        <label class="fld"><span>Target %</span><input type="text" inputmode="decimal" id="scTarg" placeholder="22.3"></label>
-        <label class="fld"><span>Training %</span><input type="text" inputmode="decimal" id="scTrain" placeholder="0"></label>
-      </div>
-      <div class="kpis" id="scKpis"></div>
-      <label class="fld" style="margin-top:12px"><span>Notes</span><textarea id="scNotes" placeholder="One line a district manager can act on"></textarea></label>
       <div class="btn-row">
         <button class="btn primary" type="button" data-print>Print or save as PDF</button>
         <button class="btn" type="button" data-csv="schedule">Download CSV</button>
@@ -779,6 +788,7 @@
   if (!store.d) store.d = {};
   if (!store.w) store.w = {};
   if (!store.cfg) store.cfg = {};
+  if (!store.ly) store.ly = {};
   if (!store.loc) store.loc = LOCS[0].id;
   var unlocked = false;
   try { unlocked = sessionStorage.getItem('mb-pt-unlock') === '1'; } catch (e) {}
@@ -1000,6 +1010,17 @@
       if (tag) { tag.className = 'tag' + (x.manual ? ' man' : ''); tag.textContent = x.manual ? 'Manual' : 'Auto'; }
     });
   }
+  function renderLook() {
+    var host = document.getElementById('lookRows'); if (!host) return;
+    var L = loc(), ly = store.ly[L.id] || {}, i, html = '';
+    for (i = 0; i < 4; i++) {
+      var w = addDays(store.week, 7 * i), raw = ly[w];
+      html += '<div class="lrow lookrow"><div class="look-line"><div><div class="lrow-name">' + (i === 0 ? 'Current week' : 'Week of ' + esc(pretty(w))) + '</div>' +
+        '<div class="lrow-sub">Mon ' + esc(pretty(w)) + ' to Sun ' + esc(pretty(addDays(w, 6))) + '</div></div>' +
+        '<label class="fld"><span>Last year sales</span><input type="text" inputmode="decimal" data-ly="' + w + '" placeholder="0" value="' + esc(has(raw) ? raw : '') + '"></label></div></div>';
+    }
+    host.innerHTML = html;
+  }
   function totKpis(c) {
     var v = c.targetHrs - c.schedHrs;
     return kpi(hrs(c.targetHrs), 'Target hours') +
@@ -1038,10 +1059,6 @@
           var k = day + '|' + role;
           return fld(role, '<input type="text" data-cover="' + esc(k) + '" placeholder="0" value="' + esc(r.cover[k] || '') + '">');
         }).join('') + '</div></div>';
-    }).join('');
-
-    document.getElementById('scProj').innerHTML = [1, 2, 3].map(function (i) {
-      return fld('Week ' + i + ' sales', '<input type="text" inputmode="decimal" data-proj="' + i + '" placeholder="0" value="' + esc(r.proj[i] || '') + '">');
     }).join('');
 
     var sch = n(r.sch), targ = n(r.targ), train = n(r.train);
@@ -1114,7 +1131,7 @@
     setTimeout(function () { window.print(); setTimeout(off, 1500); }, 30);
   }
   function renderAll() {
-    renderWeek(); renderLocBars(); renderLabor(); renderSched(); renderStaff(); }
+    renderWeek(); renderLocBars(); renderLabor(); renderLook(); renderSched(); renderStaff(); }
 
   /* ---- events ---- */
   document.addEventListener('click', function (e) {
@@ -1143,6 +1160,7 @@
     if (el.id === 'wkDate') { if (!el.value) return; store.week = monday(el.value); save(); renderAll(); return; }
     else if (el.id === 'wkSales') { r.labor.sales = el.value; touched = 'labor'; }
     else if (el.id === 'wkSchPct') { r.labor.schpct = el.value; touched = 'labor'; }
+    else if (el.hasAttribute && el.hasAttribute('data-ly')) { if (!store.ly[L.id]) store.ly[L.id] = {}; store.ly[L.id][el.getAttribute('data-ly')] = el.value; touched = 'look'; }
     else if (el.hasAttribute && el.hasAttribute('data-mgr')) { cf.mgr = el.value; touched = 'labor'; }
     else if (el.hasAttribute && el.hasAttribute('data-target')) { cf.target = el.value; touched = 'labor'; }
     else if (el.hasAttribute && el.hasAttribute('data-row')) {
@@ -1157,7 +1175,6 @@
     else if (el.id === 'scTrain') { r.sched.train = el.value; touched = 'sched'; }
     else if (el.id === 'scNotes') { r.sched.notes = el.value; touched = 'sched'; }
     else if (el.hasAttribute && el.hasAttribute('data-cover')) { r.sched.cover[el.getAttribute('data-cover')] = el.value; touched = 'cover'; }
-    else if (el.hasAttribute && el.hasAttribute('data-proj')) { r.sched.proj[el.getAttribute('data-proj')] = el.value; touched = 'sched'; }
     else if (el.id === 'stBy') { st.by = el.value; touched = 'staffmeta'; }
     else if (el.id === 'stNotes') { st.notes = el.value; touched = 'staffmeta'; }
     else if (el.hasAttribute && el.hasAttribute('data-staff')) {
@@ -1250,10 +1267,11 @@
       out.push(['SPLH scheduled', c.schedHrs > 0 ? (c.sales / c.schedHrs).toFixed(2) : '']);
       out.push(['Scheduled dollars', Math.round(c.schedDol)]);
       out.push(['Dollars left', Math.round(c.hourlyBud - c.schedDol)]);
-      if (unlocked) {
-        out.push([]); out.push(['Manager', Math.round(c.mgr), (c.mgrPct * 100).toFixed(2) + '%']);
-        out.push(['Total percent', (c.totalPct * 100).toFixed(2) + '%', 'Target ' + (c.target * 100).toFixed(2) + '%']);
-      }
+      var sr = recW(L.id).sched;
+      out.push([]); out.push(['Scheduled %', sr.sch || '']); out.push(['Target %', sr.targ || '']); out.push(['Training %', sr.train || '']); out.push(['Notes', sr.notes || '']);
+      out.push([]); out.push(['4 week look ahead']); out.push(['Week of', 'Last year sales']);
+      var lyr = store.ly[L.id] || {};
+      for (var li = 0; li < 4; li++) { var lw = addDays(store.week, 7 * li); out.push([lw, lyr[lw] || '']); }
     } else if (which === 'schedule') {
       var r = recW(L.id).sched;
       out.push(['Morning Belle People Tools', 'Schedule review']);
@@ -1261,9 +1279,6 @@
       out.push([]); out.push(['Day'].concat(COVER));
       L.days.forEach(function (day) { out.push([day].concat(COVER.map(function (role) { return r.cover[day + '|' + role] || ''; }))); });
       out.push([]); out.push(['Holes', r.holes || '']);
-      out.push(['Week 1 sales', r.proj[1] || '']); out.push(['Week 2 sales', r.proj[2] || '']); out.push(['Week 3 sales', r.proj[3] || '']);
-      out.push(['Labor scheduled', (r.sch || '') + '%']); out.push(['Labor target', (r.targ || '') + '%']); out.push(['Training', (r.train || '') + '%']);
-      out.push(['Notes', r.notes || '']);
     } else {
       var st = staffOf(L.id);
       out.push(['Morning Belle People Tools', 'Staffing tracker']);
