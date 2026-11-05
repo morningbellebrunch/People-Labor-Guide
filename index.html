@@ -503,6 +503,9 @@
   #scTrain, #scNotes { box-shadow:inset 0 0 0 2px #f2c230, inset 0 2px 4px rgba(40,70,84,0.07); background:rgba(255,246,206,0.55); }
   html[data-theme="dark"] #scTrain, html[data-theme="dark"] #scNotes { box-shadow:inset 0 0 0 2px #f2c230; background:rgba(242,194,48,0.10); }
   #scTrain:focus, #scNotes:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
+  .fld input[data-f="p"] { box-shadow:inset 0 0 0 2px #f2c230, inset 0 2px 4px rgba(40,70,84,0.07); background:rgba(255,246,206,0.55); }
+  html[data-theme="dark"] .fld input[data-f="p"] { box-shadow:inset 0 0 0 2px #f2c230; background:rgba(242,194,48,0.10); }
+  .fld input[data-f="p"]:focus { box-shadow:inset 0 0 0 2px var(--mb-green); }
   .kpis.three { grid-template-columns:repeat(3,1fr); }
   .trainrow { align-items:end; }
   .trainrow .kpis { grid-template-columns:1fr; margin-top:0; }
@@ -691,6 +694,7 @@
       <div class="kpis three" id="totKpis" style="margin-bottom:14px"></div>
       <div id="mgrBlock"></div>
       <div id="laborRows"></div>
+      <div class="kpis three" id="pctKpis" style="margin-top:14px"></div>
       <div class="btn-row">
         <button class="btn primary" type="button" data-print>Print or save as PDF</button>
         <button class="btn" type="button" data-csv="labor">Download CSV</button>
@@ -1401,6 +1405,8 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
     rows.forEach(function (x) { hp += x.p; hb += x.bud; th += x.th; sch += x.sch; sd += x.dol; });
     return { L: L, r: r, cf: cf, sales: sales, target: target, mgr: mgrFixed, mgrPct: mgrPct, rows: rows, short: short,
       schPct: has(r.schpct) ? n(r.schpct) / 100 : null,
+      trainPct: n(recW(L.id).sched.train) / 100,
+      schNet: has(r.schpct) ? Math.max(n(r.schpct) / 100 - n(recW(L.id).sched.train) / 100, 0) : null,
       hourlyPct: hp, hourlyBud: hb, targetHrs: th, schedHrs: sch, schedDol: sd, allow: allow, totalPct: hp + mgrPct };
   }
 
@@ -1446,6 +1452,7 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
     html += '<div class="btn-row" id="resetRow" style="margin-top:0;display:none"><button class="btn" type="button" data-reset>Back to auto</button></div>';
     document.getElementById('laborRows').innerHTML = html;
     document.getElementById('totKpis').innerHTML = totKpis(c);
+    document.getElementById('pctKpis').innerHTML = pctKpis(c);
     laborFlags(c);
 
     /* lock bar */
@@ -1492,6 +1499,12 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
       kpi(hrs(c.schedHrs), 'Scheduled') +
       kpi((v >= 0 ? '+' : '') + hrs(v), 'Hours left', c.schedHrs > 0 ? (v >= 0 ? 'good' : 'bad') : '');
   }
+  function pctKpis(c) {
+    var live = c.sales > 0, v = c.allow - c.hourlyPct;
+    return kpi(pc(c.hourlyPct), 'Percent of sales') +
+      kpi(live ? pc(c.allow) : 'Waiting', 'Target') +
+      kpi(live ? (Math.abs(v * 100) < 0.005 ? '0.00%' : (v > 0 ? '+' : '') + (v * 100).toFixed(2) + '%') : 'Waiting', 'Variance', live ? (v >= -0.00005 ? 'good' : 'bad') : '');
+  }
   function sMoney(v) { var r = Math.round(v); return (r < 0 ? '-' : '') + money(Math.abs(r)); }
   /* Dollars left: the typed scheduled labor percent wins, because it comes from the scheduler. Without it, hours times wage. */
   function dollarsLeft(c) {
@@ -1525,7 +1538,8 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
         }).join('') + '</div></div>';
     }).join('');
 
-    document.getElementById('scKpis').innerHTML = kpi(n(r.train).toFixed(2) + '%', 'Training');
+    var c0 = laborCalc();
+    document.getElementById('scKpis').innerHTML = kpi(c0.schNet !== null ? pc(c0.schNet) : 'Waiting', 'Scheduled labor without training');
   }
   function set(id, v) { var el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v || ''; }
 
@@ -1647,6 +1661,7 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
   function refreshLaborLive() {
     var c = laborCalc(), focus = document.activeElement;
     document.getElementById('laborKpis').innerHTML = topKpis(c);
+    document.getElementById('scKpis').innerHTML = kpi(c.schNet !== null ? pc(c.schNet) : 'Waiting', 'Scheduled labor without training');
     c.rows.forEach(function (x) {
       var row = document.querySelector('[data-row="' + x.k + '"]');
       if (!row) return;
@@ -1659,6 +1674,7 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
       box.querySelector('.ro').textContent = hrs(x.th);
     });
     document.getElementById('totKpis').innerHTML = totKpis(c);
+    document.getElementById('pctKpis').innerHTML = pctKpis(c);
     if (unlocked) {
       var mk = document.getElementById('mgrBlock').querySelector('.kpis');
       if (mk) mk.innerHTML = kpi(c.sales > 0 ? pc(c.totalPct) : 'Waiting', 'Total percent', c.sales > 0 ? (c.totalPct <= c.target + 0.0005 ? 'good' : 'bad') : '') + kpi(pc(c.target), 'Total target');
@@ -1669,8 +1685,9 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
     if (focus && focus.focus) focus.focus();
   }
   function refreshSchedLive() {
-    var r = recW(loc().id).sched;
-    document.getElementById('scKpis').innerHTML = kpi(n(r.train).toFixed(2) + '%', 'Training');
+    var c0 = laborCalc();
+    document.getElementById('scKpis').innerHTML = kpi(c0.schNet !== null ? pc(c0.schNet) : 'Waiting', 'Scheduled labor without training');
+    document.getElementById('laborKpis').innerHTML = topKpis(c0);
   }
   function refreshStaffLive() {
     var L = loc(), r = staffOf(L.id), focus = document.activeElement;
@@ -1708,11 +1725,15 @@ if (document.documentElement.classList.contains('v32') && window.MBGlass && MBGl
       out.push(['Total target', (c.target * 100).toFixed(2) + '%']);
       out.push(['Hourly allowance', (c.allow * 100).toFixed(2) + '%']);
       out.push(['Scheduled labor', c.schPct !== null ? (c.schPct * 100).toFixed(2) + '%' : '']);
+      out.push(['Training %', (c.trainPct * 100).toFixed(2) + '%']);
+      out.push(['Scheduled labor without training', c.schNet !== null ? (c.schNet * 100).toFixed(2) + '%' : '']);
       out.push(['Over or under', c.schPct !== null ? ((c.schPct - c.allow) * 100).toFixed(2) + '%' : '']);
       out.push([]);
       out.push(['Position', 'Percent of sales', 'Budget', 'Avg wage', 'Target hours', 'Scheduled', 'Hours left']);
       c.rows.forEach(function (x) { out.push([x.name, (x.p * 100).toFixed(2) + '%', Math.round(x.bud), x.w, hrs(x.th), x.sch, hrs(x.v)]); });
       out.push(['Hourly total', (c.hourlyPct * 100).toFixed(2) + '%', Math.round(c.hourlyBud), '', hrs(c.targetHrs), c.schedHrs, hrs(c.targetHrs - c.schedHrs)]);
+      out.push(['Target (hourly allowance)', (c.allow * 100).toFixed(2) + '%']);
+      out.push(['Variance', (Math.abs((c.allow - c.hourlyPct) * 100) < 0.005 ? 0 : (c.allow - c.hourlyPct) * 100).toFixed(2) + '%']);
       out.push([]);
       out.push(['SPLH target', c.targetHrs > 0 ? (c.sales / c.targetHrs).toFixed(2) : '']);
       out.push(['SPLH scheduled', c.schedHrs > 0 ? (c.sales / c.schedHrs).toFixed(2) : '']);
